@@ -1,12 +1,56 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { AppleLogo } from './AppleLogo'
 import { Lights } from './Lights'
+import { Controls } from './Controls'
+
+const TOTAL_CYCLE = 6 // seconds
 
 export function AppleIntro() {
+  const [isPlaying, setIsPlaying] = useState(true)
+  const [progress, setProgress] = useState(0)
+
+  // Animation loop
+  useEffect(() => {
+    if (!isPlaying) return
+
+    let lastTime = performance.now()
+    let animationId: number
+
+    const animate = (currentTime: number) => {
+      const deltaTime = (currentTime - lastTime) / 1000 // Convert to seconds
+      lastTime = currentTime
+
+      setProgress((prev) => {
+        const newProgress = prev + deltaTime / TOTAL_CYCLE
+        return newProgress >= 1 ? newProgress % 1 : newProgress
+      })
+
+      animationId = requestAnimationFrame(animate)
+    }
+
+    animationId = requestAnimationFrame(animate)
+
+    return () => cancelAnimationFrame(animationId)
+  }, [isPlaying])
+
+  const handlePlayPause = useCallback(() => {
+    setIsPlaying((prev) => !prev)
+  }, [])
+
+  const handleRestart = useCallback(() => {
+    setProgress(0)
+    setIsPlaying(true)
+  }, [])
+
+  const handleSliderChange = useCallback((value: number) => {
+    setProgress(value)
+  }, [])
+
   return (
     <div className="apple-intro-container">
       <Canvas
@@ -19,8 +63,8 @@ export function AppleIntro() {
       >
         <color attach="background" args={['#000000']} />
 
-        <AppleLogo />
-        <Lights />
+        <AppleLogo progress={progress} />
+        <Lights progress={progress} />
 
         <EffectComposer>
           <Bloom
@@ -40,6 +84,14 @@ export function AppleIntro() {
           maxPolarAngle={Math.PI / 1.5}
         />
       </Canvas>
+
+      <Controls
+        isPlaying={isPlaying}
+        progress={progress}
+        onPlayPause={handlePlayPause}
+        onRestart={handleRestart}
+        onSliderChange={handleSliderChange}
+      />
     </div>
   )
 }

@@ -46,9 +46,17 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.MeshPhysicalMaterial>(null)
 
+  // Seeded random offsets based on index (consistent per slice)
+  const seedX = Math.sin(index * 1234.5678) * 0.5
+  const seedY = Math.cos(index * 8765.4321) * 0.5
+  const randomOffsetX = seedX * 80 // Random X offset
+  const randomOffsetY = seedY * 60 // Random Y offset
+
   // Staggered timing - outer slices take slightly longer to fold in
   const distanceFromCenter = Math.abs(index - (total - 1) / 2)
   const maxDistance = (total - 1) / 2
+  const normalizedIndex = index / (total - 1)
+  // const sliceDelay = normalizedIndex * 0.15
   const sliceDelay = (distanceFromCenter / maxDistance) * 0.15
 
   useFrame(() => {
@@ -60,17 +68,22 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     // Ease-out cubic - starts fast, slows down towards end
     const easedProgress = 1 - Math.pow(1 - sliceProgress, 3)
 
-    // Symmetric spread: half go left, half go right
-    const maxSpread = Math.PI * 0.9 // Wide spread (~160 degrees total)
-    const centerIndex = (total - 1) / 2
-    const offsetFromCenter = index - centerIndex
-    const normalizedOffset = offsetFromCenter / centerIndex // -1 to 1
-    const startAngle = normalizedOffset * maxSpread
-
+    // Fan spread: all colors fan out in sequence like a flip-book
+    // Lower max angle so edge colors are still visible (not facing away)
+    const maxSpread = Math.PI /.8 // ~108 degrees total spread
+    const normalizedIndex = index / (total - 1) // 0 to 1
+    // Map to range: first color at -maxSpread, last color at +maxSpread
+    const startAngle = (normalizedIndex - 1) * maxSpread
+    // const startAngle = -maxSpread * (1 - normalizedIndex)
     // Keep a tiny offset even when merged for holographic layering effect
+    const normalizedOffset = -normalizedIndex // * 2 - 1 // -1 to 1 for Z positioning
     const minOffset = normalizedOffset * 0.03 // Slight final offset
     const currentRotation = startAngle * (1 - easedProgress) + minOffset * easedProgress
     meshRef.current.rotation.y = currentRotation
+
+    // Random X/Y offsets that correct to 0 (creates rainbow echo effect)
+    meshRef.current.position.x = randomOffsetX * (1 - easedProgress)
+    meshRef.current.position.y = randomOffsetY * (1 - easedProgress)
 
     // Offset in Z so layers are visible as holographic strips
     meshRef.current.position.z = normalizedOffset * 3 * (1 - easedProgress) + normalizedOffset * 1.5 * easedProgress
@@ -80,7 +93,6 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
 
     // Create holographic final colors based on slice position
     // More saturated colors for visible gradient effect
-    const normalizedIndex = index / (total - 1) // 0 to 1
     const holographicColors = [
       new THREE.Color('#c0ffe0'), // Green tint (for blues)
       new THREE.Color('#d0ffd0'), // Light green
@@ -100,14 +112,18 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     const colorFade = Math.max(0, (easedProgress - 0.6) / 0.4)
     materialRef.current.color.copy(baseColor).lerp(finalColor, colorFade)
 
-    // Emissive glow - very bright at start, dims as it merges
-    // Starts at 1.5 intensity, fades to 0 as it converges
-    const glowIntensity = 1 * (1 - easedProgress)
+    // Emissive glow - bright at start, dims slowly and smoothly
+    // Uses a smooth ease-out curve for gentle fade
+    const glowProgress = Math.pow(easedProgress, 0.5) // Slower fade (square root easing)
+    const glowIntensity = 2.5 * Math.pow(1 - glowProgress, 2) // Quadratic ease-out for smooth dim
     materialRef.current.emissive.copy(baseColor)
     materialRef.current.emissiveIntensity = glowIntensity
 
-    // Opacity: semi-transparent to allow color blending
-    materialRef.current.opacity = 0.5 + easedProgress * 0.5
+    // Opacity: animate from 20% to 100% based on progress
+    materialRef.current.opacity = 0.2 + easedProgress * 0.8
+
+    // Transmission decreases as opacity increases (more solid at end)
+    materialRef.current.transmission = 0.5 * (1 - easedProgress)
   })
 
   return (
@@ -118,13 +134,14 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
         emissive={color}
         emissiveIntensity={1.5}
         transparent
-        opacity={0.5}
-        roughness={0.05}
+        opacity={0.2}
+        roughness={0.02}
         metalness={0.0}
         clearcoat={1.0}
-        clearcoatRoughness={0.02}
-        transmission={0.15}
-        thickness={1}
+        clearcoatRoughness={0.01}
+        transmission={0.4}
+        thickness={0.5}
+        ior={1.5}
         side={THREE.DoubleSide}
         depthWrite={false}
       />
@@ -132,47 +149,109 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
   )
 }
 
-function TVText({ opacity }: { opacity: number }) {
-  if (opacity <= 0) return null
+// Subset of colors for TV text (fewer layers for performance)
+const TV_COLORS = [
+  '#0066ff', // Blue
+  '#00ccff', // Cyan
+  '#00ff44', // Green
+  '#88ff00', // Lime
+  '#ffff00', // Yellow
+  '#ff9900', // Orange
+  '#ff3300', // Red
+  '#ff00aa', // Pink
+  '#cc00ff', // Purple
+]
+
+interface TVTextProps {
+  progress: number
+}
+
+function TVText({ progress }: TVTextProps) {
+  // TV appears after 55% progress
+  if (progress <= 0.55) return null
+
+  // TV animation progress (0 to 1) after it starts appearing
+  const tvProgress = Math.min((progress - 0.55) / 0.35, 1)
+  const easedProgress = 1 - Math.pow(1 - tvProgress, 3)
 
   return (
     <Html
       position={[2.5, 0, 0]}
       center
       style={{
-        opacity,
-        transition: 'opacity 0.1s ease-out',
+        pointerEvents: 'none',
       }}
     >
-      <span
-        style={{
-          fontSize: '350px',
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-          fontWeight: 500,
-          letterSpacing: '-0.01em',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          background: 'linear-gradient(180deg, #ffffff 0%, #e8fff8 30%, #ffe8f8 70%, #fff8e8 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-        }}
-      >
-        tv
-      </span>
+      <div style={{ position: 'relative', width: '400px', height: '400px' }}>
+        {TV_COLORS.map((color, index) => {
+          const total = TV_COLORS.length
+          const normalizedIndex = index / (total - 1)
+          const maxSpread = 60 // pixels of spread
+          const maxRotation = 15 // degrees of rotation
+
+          // Calculate offset and rotation based on progress
+          const offsetX = (normalizedIndex * 2 - 1) * maxSpread * (1 - easedProgress)
+          const offsetY = Math.sin(normalizedIndex * Math.PI) * 20 * (1 - easedProgress)
+          const rotation = (normalizedIndex * 2 - 1) * maxRotation * (1 - easedProgress)
+
+          // Opacity: starts visible, fades to show only merged result
+          const layerOpacity = index === Math.floor(total / 2)
+            ? 1 // Middle layer stays fully visible
+            : 0.7 * (1 - easedProgress * 0.8) + 0.2
+
+          return (
+            <span
+              key={index}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: `translate(-50%, -50%) translateX(${offsetX}px) translateY(${offsetY}px) rotate(${rotation}deg)`,
+                fontSize: '350px',
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                fontWeight: 500,
+                letterSpacing: '-0.01em',
+                whiteSpace: 'nowrap',
+                userSelect: 'none',
+                color: color,
+                opacity: layerOpacity,
+                textShadow: `0 0 ${30 * (1 - easedProgress)}px ${color}`,
+                mixBlendMode: 'screen',
+              }}
+            >
+              tv
+            </span>
+          )
+        })}
+      </div>
     </Html>
   )
 }
 
-export function AppleLogo() {
+interface AppleLogoProps {
+  progress: number
+}
+
+export function AppleLogo({ progress }: AppleLogoProps) {
   const groupRef = useRef<THREE.Group>(null)
   const [geometry, setGeometry] = useState<THREE.ExtrudeGeometry | null>(null)
-  const [animationProgress, setAnimationProgress] = useState(0)
 
-  // TV fades in once colors merge (around 60% through)
-  const tvOpacity = animationProgress > 0.55
-    ? Math.min((animationProgress - 0.55) / 0.1, 1)
-    : 0
+  useFrame(() => {
+  if (!groupRef.current) return
+
+  // closing portion only (your slices complete around ~0.55)
+  const closeProgress = Math.min(progress / 0.55, 1)
+  const eased = 1 - Math.pow(1 - closeProgress, 3)
+
+  // Example: start rotated, end aligned
+  const startY = -Math.PI * 0.1   // ~-108deg at start
+  const endY = 0                 // settled at the end
+  groupRef.current.rotation.y = startY * (1 - eased) + endY * eased
+
+  // Optional: tiny roll for “premium” feel
+  const startZ = Math.PI * 0.08  // ~14deg
+  groupRef.current.rotation.z = startZ * (1 - eased)
+})
 
   useEffect(() => {
     const loader = new SVGLoader()
@@ -192,7 +271,7 @@ export function AppleLogo() {
 
       if (shapes.length > 0) {
         const extrudeSettings = {
-          depth: 12,
+          depth: 5,
           bevelEnabled: true,
           bevelThickness: 1.5,
           bevelSize: 0.8,
@@ -213,13 +292,6 @@ export function AppleLogo() {
     }
   }, [])
 
-  // Animation loop
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    const progress = (t % TOTAL_CYCLE) / TOTAL_CYCLE
-    setAnimationProgress(progress)
-  })
-
   if (!geometry) return null
 
   return (
@@ -232,11 +304,11 @@ export function AppleLogo() {
             color={color}
             index={index}
             total={LOGO_COLORS.length}
-            animationProgress={animationProgress}
+            animationProgress={progress}
           />
         ))}
       </group>
-      <TVText opacity={tvOpacity} />
+      <TVText progress={progress} />
     </group>
   )
 }

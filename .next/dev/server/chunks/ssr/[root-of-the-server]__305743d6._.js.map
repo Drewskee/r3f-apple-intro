@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///Users/andrewstephenson/Documents/GitHub/r3f-apple-intro/src/app/page.tsx"],"sourcesContent":["export default function Home() {\n  return (\n    <div className=\"flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800\">\n      <main className=\"text-center\">\n        <h1 className=\"text-5xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-6xl\">\n          2026\n        </h1>\n        <p className=\"mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300\">\n          Next.js app with Tailwind CSS and shadcn/ui / Coming Soon\n        </p>\n      </main>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,+YAAC;QAAI,WAAU;kBACb,cAAA,+YAAC;YAAK,WAAU;;8BACd,+YAAC;oBAAG,WAAU;8BAA+E;;;;;;8BAG7F,+YAAC;oBAAE,WAAU;8BAA4D;;;;;;;;;;;;;;;;;AAMjF"}}]
+}

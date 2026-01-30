@@ -1,0 +1,220 @@
+'use client'
+
+import { useRef, useEffect, useState } from 'react'
+import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
+import { Html } from '@react-three/drei'
+
+// Apple logo SVG path
+const APPLE_SVG_PATH = `M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57-155.5-127C46.7 790.7 0 663 0 541.8c0-194.4 126.4-297.5 250.8-297.5 66.1 0 121.2 43.4 162.7 43.4 39.5 0 101.1-46 176.3-46 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z`
+
+// Full rainbow spectrum - creates color blending at overlaps
+const LOGO_COLORS = [
+  '#0066ff', // Blue (far left)
+  '#0099ff', // Sky blue
+  '#00ccff', // Cyan
+  '#00ffcc', // Cyan-green
+  '#00ff88', // Green-cyan
+  '#00ff44', // Green
+  '#44ff00', // Yellow-green
+  '#88ff00', // Lime
+  '#ccff00', // Yellow-lime
+  '#ffff00', // Yellow
+  '#ffcc00', // Yellow-orange
+  '#ff9900', // Orange
+  '#ff6600', // Red-orange
+  '#ff3300', // Red
+  '#ff0066', // Red-pink
+  '#ff00aa', // Pink
+  '#ff00ff', // Magenta
+  '#cc00ff', // Purple (far right)
+]
+
+// Animation timing
+const TOTAL_CYCLE = 6 // seconds - longer to show TV at end
+
+interface SingleLogoProps {
+  geometry: THREE.ExtrudeGeometry
+  color: string
+  index: number
+  total: number
+  animationProgress: number
+}
+
+function SingleLogo({ geometry, color, index, total, animationProgress }: SingleLogoProps) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const materialRef = useRef<THREE.MeshPhysicalMaterial>(null)
+
+  // Staggered timing - outer slices take slightly longer to fold in
+  const distanceFromCenter = Math.abs(index - (total - 1) / 2)
+  const maxDistance = (total - 1) / 2
+  const sliceDelay = (distanceFromCenter / maxDistance) * 0.15
+
+  useFrame(() => {
+    if (!meshRef.current || !materialRef.current) return
+
+    // Progress for this slice - completes by 60% of animation
+    const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (0.55 - sliceDelay), 1))
+
+    // Ease-out cubic - starts fast, slows down towards end
+    const easedProgress = 1 - Math.pow(1 - sliceProgress, 3)
+
+    // Symmetric spread: half go left, half go right
+    const maxSpread = Math.PI * 0.9 // Wide spread (~160 degrees total)
+    const centerIndex = (total - 1) / 2
+    const offsetFromCenter = index - centerIndex
+    const normalizedOffset = offsetFromCenter / centerIndex // -1 to 1
+    const startAngle = normalizedOffset * maxSpread
+
+    const currentRotation = startAngle * (1 - easedProgress)
+    meshRef.current.rotation.y = currentRotation
+
+    // Color: stay vibrant longer, then fade to subtle holographic tint
+    const baseColor = new THREE.Color(color)
+    // Final color keeps a subtle hint of the original (holographic effect)
+    const finalColor = new THREE.Color(color).lerp(new THREE.Color('#f0f0f0'), 0.85)
+    // Keep color vibrant until 60% progress, then fade to holographic
+    const colorFade = Math.max(0, (easedProgress - 0.6) / 0.4)
+    materialRef.current.color.copy(baseColor).lerp(finalColor, colorFade)
+
+    // Emissive glow - very bright at start, dims as it merges
+    // Starts at 1.5 intensity, fades to 0 as it converges
+    const glowIntensity = 1 * (1 - easedProgress)
+    materialRef.current.emissive.copy(baseColor)
+    materialRef.current.emissiveIntensity = glowIntensity
+
+    // Opacity: semi-transparent to allow color blending
+    materialRef.current.opacity = 0.5 + easedProgress * 0.5
+  })
+
+  return (
+    <mesh ref={meshRef} geometry={geometry}>
+      <meshPhysicalMaterial
+        ref={materialRef}
+        color={color}
+        emissive={color}
+        emissiveIntensity={1.5}
+        transparent
+        opacity={0.5}
+        roughness={0.05}
+        metalness={0.0}
+        clearcoat={1.0}
+        clearcoatRoughness={0.02}
+        transmission={0.15}
+        thickness={1}
+        side={THREE.DoubleSide}
+        depthWrite={false}
+      />
+    </mesh>
+  )
+}
+
+function TVText({ opacity }: { opacity: number }) {
+  if (opacity <= 0) return null
+
+  return (
+    <Html
+      position={[2.5, 0, 0]}
+      center
+      style={{
+        opacity,
+        transition: 'opacity 0.1s ease-out',
+      }}
+    >
+      <span
+        style={{
+          fontSize: '350px',
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+          fontWeight: 500,
+          letterSpacing: '-0.01em',
+          whiteSpace: 'nowrap',
+          userSelect: 'none',
+          background: 'linear-gradient(180deg, #ffffff 0%, #e8fff8 30%, #ffe8f8 70%, #fff8e8 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}
+      >
+        tv
+      </span>
+    </Html>
+  )
+}
+
+export function AppleLogo() {
+  const groupRef = useRef<THREE.Group>(null)
+  const [geometry, setGeometry] = useState<THREE.ExtrudeGeometry | null>(null)
+  const [animationProgress, setAnimationProgress] = useState(0)
+
+  // TV fades in once colors merge (around 60% through)
+  const tvOpacity = animationProgress > 0.55
+    ? Math.min((animationProgress - 0.55) / 0.1, 1)
+    : 0
+
+  useEffect(() => {
+    const loader = new SVGLoader()
+    const svgData = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 814 1000">
+      <path d="${APPLE_SVG_PATH}" fill="black"/>
+    </svg>`
+
+    const result = loader.parse(svgData)
+
+    if (result.paths.length > 0) {
+      const shapes: THREE.Shape[] = []
+
+      result.paths.forEach((path) => {
+        const pathShapes = SVGLoader.createShapes(path)
+        shapes.push(...pathShapes)
+      })
+
+      if (shapes.length > 0) {
+        const extrudeSettings = {
+          depth: 12,
+          bevelEnabled: true,
+          bevelThickness: 1.5,
+          bevelSize: 0.8,
+          bevelOffset: 0,
+          bevelSegments: 2,
+        }
+
+        const geo = new THREE.ExtrudeGeometry(shapes, extrudeSettings)
+        geo.center()
+
+        // Offset so pivot is on the round side (opposite the bite)
+        // The bite is on the left after centering, so move geometry left
+        // to put pivot on the right (round side)
+        geo.translate(-407, 0, 0)
+
+        setGeometry(geo)
+      }
+    }
+  }, [])
+
+  // Animation loop
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime()
+    const progress = (t % TOTAL_CYCLE) / TOTAL_CYCLE
+    setAnimationProgress(progress)
+  })
+
+  if (!geometry) return null
+
+  return (
+    <group ref={groupRef} position={[0.5, 0, 0]}>
+      <group scale={0.005} rotation={[Math.PI, 0, 0]}>
+        {LOGO_COLORS.map((color, index) => (
+          <SingleLogo
+            key={index}
+            geometry={geometry}
+            color={color}
+            index={index}
+            total={LOGO_COLORS.length}
+            animationProgress={animationProgress}
+          />
+        ))}
+      </group>
+      <TVText opacity={tvOpacity} />
+    </group>
+  )
+}

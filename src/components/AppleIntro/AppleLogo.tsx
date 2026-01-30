@@ -67,13 +67,35 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     const normalizedOffset = offsetFromCenter / centerIndex // -1 to 1
     const startAngle = normalizedOffset * maxSpread
 
-    const currentRotation = startAngle * (1 - easedProgress)
+    // Keep a tiny offset even when merged for holographic layering effect
+    const minOffset = normalizedOffset * 0.03 // Slight final offset
+    const currentRotation = startAngle * (1 - easedProgress) + minOffset * easedProgress
     meshRef.current.rotation.y = currentRotation
 
-    // Color: stay vibrant longer, then fade to subtle holographic tint
+    // Offset in Z so layers are visible as holographic strips
+    meshRef.current.position.z = normalizedOffset * 3 * (1 - easedProgress) + normalizedOffset * 1.5 * easedProgress
+
+    // Color: stay vibrant longer, then fade to holographic gradient
     const baseColor = new THREE.Color(color)
-    // Final color keeps a subtle hint of the original (holographic effect)
-    const finalColor = new THREE.Color(color).lerp(new THREE.Color('#f0f0f0'), 0.85)
+
+    // Create holographic final colors based on slice position
+    // More saturated colors for visible gradient effect
+    const normalizedIndex = index / (total - 1) // 0 to 1
+    const holographicColors = [
+      new THREE.Color('#c0ffe0'), // Green tint (for blues)
+      new THREE.Color('#d0ffd0'), // Light green
+      new THREE.Color('#e8ffe8'), // Pale green
+      new THREE.Color('#f8f8f0'), // Warm white (center)
+      new THREE.Color('#fff0f0'), // Pale pink
+      new THREE.Color('#ffd0e8'), // Light pink
+      new THREE.Color('#ffc0e0'), // Pink tint (for magentas)
+    ]
+    const colorIndex = normalizedIndex * (holographicColors.length - 1)
+    const lowerIndex = Math.floor(colorIndex)
+    const upperIndex = Math.min(lowerIndex + 1, holographicColors.length - 1)
+    const blend = colorIndex - lowerIndex
+    const finalColor = holographicColors[lowerIndex].clone().lerp(holographicColors[upperIndex], blend)
+
     // Keep color vibrant until 60% progress, then fade to holographic
     const colorFade = Math.max(0, (easedProgress - 0.6) / 0.4)
     materialRef.current.color.copy(baseColor).lerp(finalColor, colorFade)

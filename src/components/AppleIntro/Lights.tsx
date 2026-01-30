@@ -8,8 +8,8 @@ export function Lights() {
 
       {/* Key light from front */}
       <directionalLight
-        position={[0, 0, 10]}
-        intensity={1.2}
+        position={[-2, 0, 40]}
+        intensity={2}
         color="#ffffff"
       />
 

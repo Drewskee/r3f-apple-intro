@@ -1,1 +1,9 @@
 node_modules
+.next
+.next/dev/cache/turbopack/v16.1.0-canary.19-84-g3aa53984e/CURRENT
+.next/dev/cache/turbopack/v16.1.0-canary.19-84-g3aa53984e/LOG
+.next/dev/logs/next-development.log
+.next/dev/server/chunks/ssr/\[root-of-the-server\]__204775af._.js
+.next/dev/server/chunks/ssr/\[root-of-the-server\]__204775af._.js.map
+.next/dev/static/chunks/src_components_AppleIntro_8fc755b8._.js
+.next/dev/static/chunks/src_components_AppleIntro_8fc755b8._.js.map

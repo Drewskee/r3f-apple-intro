@@ -26,7 +26,7 @@ export function AppleIntro() {
           <Bloom
             intensity={1.5}
             luminanceThreshold={0.1}
-            luminanceSmoothing={0.95}
+            luminanceSmoothing={1.95}
             mipmapBlur
             radius={0.8}
           />

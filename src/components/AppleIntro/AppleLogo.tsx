@@ -11,26 +11,26 @@ import { Text } from '@react-three/drei'
 // Apple logo SVG path
 const APPLE_SVG_PATH = `M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57-155.5-127C46.7 790.7 0 663 0 541.8c0-194.4 126.4-297.5 250.8-297.5 66.1 0 121.2 43.4 162.7 43.4 39.5 0 101.1-46 176.3-46 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z`
 
-// Full rainbow spectrum - creates color blending at overlaps
+// Rainbow glass spectrum - ends on white
 const LOGO_COLORS = [
-  '#0066ff', // Blue (far left)
-  '#0099ff', // Sky blue
-  '#00ccff', // Cyan
-  '#00ffcc', // Cyan-green
-  '#00ff88', // Green-cyan
-  '#00ff44', // Green
-  '#44ff00', // Yellow-green
-  '#88ff00', // Lime
-  '#ccff00', // Yellow-lime
-  '#ffff00', // Yellow
-  '#ffcc00', // Yellow-orange
-  '#ff9900', // Orange
-  '#ff6600', // Red-orange
-  '#ff3300', // Red
-  '#ff0066', // Red-pink
+  '#cc00ff', // Purple (back)
   '#ff00aa', // Pink
-  '#ff00ff', // Magenta
-  '#cc00ff', // Purple (far right)
+  '#ff0066', // Red-pink
+  '#ff3300', // Red
+  '#ff6600', // Red-orange
+  '#ff9900', // Orange
+  '#ffcc00', // Yellow-orange
+  '#ffff00', // Yellow
+  '#ccff00', // Yellow-lime
+  '#88ff00', // Lime
+  '#44ff00', // Yellow-green
+  '#00ff44', // Green
+  '#00ff88', // Green-cyan
+  '#00ffcc', // Cyan-green
+  '#00ccff', // Cyan
+  '#99ddff', // Light cyan
+  '#cceeff', // Pale blue
+  '#ffffff', // White (front)
 ]
 
 // Animation timing
@@ -70,65 +70,55 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     // Ease-out cubic - starts fast, slows down towards end
     const easedProgress = 1 - Math.pow(1 - sliceProgress, 5)
 
-    // Fan spread: all colors fan out in sequence like a flip-book
-    // Lower max angle so edge colors are still visible (not facing away)
-    const maxSpread = Math.PI /.8 // ~108 degrees total spread
+    // Fan spread: like a book closing from one side
+    const maxSpread = Math.PI / 0.8 // ~225 degrees total spread
     const normalizedIndex = index / (total - 1) // 0 to 1
-    // const normalizedIndex = index 
-    // Map to range: first color at -maxSpread, last color at +maxSpread
+    // All slices fan out to one side, first slice most rotated
     const startAngle = (normalizedIndex - 1) * maxSpread
-    // const startAngle = -maxSpread * (1 - normalizedIndex)
-    // Keep a tiny offset even when merged for holographic layering effect
-    const normalizedOffset = -normalizedIndex // * 2 - 1 // -1 to 1 for Z positioning
-    const minOffset = normalizedOffset * 0.03 // Slight final offset
-    const currentRotation = startAngle * (1 - easedProgress) + minOffset * easedProgress
+    // End aligned together
+    const currentRotation = startAngle * (1 - easedProgress)
     meshRef.current.rotation.y = currentRotation
 
     // Random X/Y offsets that correct to 0 (creates rainbow echo effect)
     meshRef.current.position.x = randomOffsetX * (1 - easedProgress)
     meshRef.current.position.y = randomOffsetY * (1 - easedProgress)
 
-    // Offset in Z so layers are visible as holographic strips
-    meshRef.current.position.z = normalizedOffset * 3 * (1 - easedProgress) + normalizedOffset * 1.5 * easedProgress
+    // Z-offset: purple (index 0) in back, white (last index) in front
+    const zStart = (normalizedIndex - 0.5) * 4 // Spread out at start
+    const zEnd = normalizedIndex * 0.8 // Purple at z=0 (back), White at z=0.8 (front)
+    meshRef.current.position.z = zStart * (1 - easedProgress) + zEnd * easedProgress
 
-    // Color: smoothly blend from vibrant to white
+    // Glass material - keep color throughout
     const baseColor = new THREE.Color(color)
-    const whiteColor = new THREE.Color('#ffffff')
+    materialRef.current.color.copy(baseColor)
 
-    // Smooth fade to white - starts at 50%, fully white by 100%
-    const colorFade = Math.max(0, (easedProgress - 0.5) / 0.5)
-    const smoothFade = colorFade * colorFade // Ease-in for smoother transition
-    materialRef.current.color.copy(baseColor).lerp(whiteColor, smoothFade)
-
-    // Emissive glow - bright at start, dims slowly and smoothly
-    // Uses a smooth ease-out curve for gentle fade
-    const glowProgress = Math.pow(easedProgress, 0.5) // Slower fade (square root easing)
-    const glowIntensity = 2.5 * Math.pow(1 - glowProgress, 2) // Quadratic ease-out for smooth dim
+    // Emissive rim glow - maintains throughout for glass edge effect
+    const glowIntensity = 1.5 * (0.3 + 0.7 * (1 - easedProgress)) // Fades but keeps some glow
     materialRef.current.emissive.copy(baseColor)
     materialRef.current.emissiveIntensity = glowIntensity
 
-    // Opacity: animate from 20% to 100% based on progress
-    materialRef.current.opacity = 0.2 + easedProgress * 0.8
+    // Glass-like transparency - stays transparent
+    materialRef.current.opacity = 0.15 + easedProgress * 0.25 // 15% to 40%
 
-    // Transmission decreases as opacity increases (more solid at end)
-    materialRef.current.transmission = 0.5 * (1 - easedProgress)
+    // High transmission for glass look
+    materialRef.current.transmission = 0.85 - easedProgress * 0.15 // 85% to 70%
   })
 
   return (
-    <mesh ref={meshRef} geometry={geometry}>
+    <mesh ref={meshRef} geometry={geometry} renderOrder={index}>
       <meshPhysicalMaterial
         ref={materialRef}
         color={color}
         emissive={color}
         emissiveIntensity={1.5}
         transparent
-        opacity={0.2}
-        roughness={0.02}
+        opacity={0.15}
+        roughness={0.0}
         metalness={0.0}
         clearcoat={1.0}
-        clearcoatRoughness={0.01}
-        transmission={0.4}
-        thickness={0.5}
+        clearcoatRoughness={0.0}
+        transmission={0.85}
+        thickness={1.0}
         ior={1.5}
         side={THREE.DoubleSide}
         depthWrite={false}

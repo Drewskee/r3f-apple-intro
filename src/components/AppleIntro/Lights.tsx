@@ -16,14 +16,14 @@ export function Lights({ progress }: LightsProps) {
 
     // Light fades in smoothly - starts at 40%, full at 65%
     const fadeStart = 0.4
-    const fadeEnd = 0.65
+    const fadeEnd = 0.6
     const fadeProgress = Math.max(0, Math.min((progress - fadeStart) / (fadeEnd - fadeStart), 1))
 
     // Smooth ease-out curve
     const easedFade = 1 - Math.pow(1 - fadeProgress, 3)
 
     // Animate intensity from 0 to 2.5
-    directionalLightRef.current.intensity = easedFade * 1.5
+    directionalLightRef.current.intensity = easedFade * 1.1
 
     // Animate Z position straight in (from -10 to 40)
     directionalLightRef.current.position.z = -10 + easedFade * 50
@@ -32,15 +32,15 @@ export function Lights({ progress }: LightsProps) {
   return (
     <>
       {/* Stronger ambient for colored apple glow */}
-      <ambientLight intensity={2.2} />
+      <ambientLight intensity={2} />
 
       {/* Key light - animates straight in from behind */}
-      <directionalLight
+      {/* <directionalLight
         ref={directionalLightRef}
-        position={[-3, -1, -10]}
+        position={[-2, -1, 0]}
         intensity={0}
         color="#ffffff"
-      />
+      /> */}
 
       {/* Rim lights for edge glow */}
       <pointLight position={[8, 0, -5]} intensity={2} color="#ff00ff" distance={20} />

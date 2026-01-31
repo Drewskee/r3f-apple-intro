@@ -119,6 +119,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -126,12 +127,21 @@
 
 /* Apple Intro Canvas Styles */
 .apple-intro-container {
-  position: fixed;
+  /* position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #000;
+  background: #000; */
+  width: 100%;
+  height: calc(100vh - 64px);
+  background: #0F2027;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to bottom, #2C5364, #203A43, #0F2027);
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to bottom, #2C5364, #203A43, #0F2027);
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
 }
 
 .apple-intro-container canvas {

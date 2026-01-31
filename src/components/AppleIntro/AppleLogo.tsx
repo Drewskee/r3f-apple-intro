@@ -5,6 +5,8 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { Html } from '@react-three/drei'
+import { Text } from '@react-three/drei'
+
 
 // Apple logo SVG path
 const APPLE_SVG_PATH = `M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57-155.5-127C46.7 790.7 0 663 0 541.8c0-194.4 126.4-297.5 250.8-297.5 66.1 0 121.2 43.4 162.7 43.4 39.5 0 101.1-46 176.3-46 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z`
@@ -55,7 +57,7 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
   // Staggered timing - outer slices take slightly longer to fold in
   const distanceFromCenter = Math.abs(index - (total - 1) / 2)
   const maxDistance = (total - 1) / 2
-  const normalizedIndex = index / (total - 1)
+  // const normalizedIndex = index / (total - 1)
   // const sliceDelay = normalizedIndex * 0.15
   const sliceDelay = (distanceFromCenter / maxDistance) * 0.15
 
@@ -66,12 +68,13 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (0.55 - sliceDelay), 1))
 
     // Ease-out cubic - starts fast, slows down towards end
-    const easedProgress = 1 - Math.pow(1 - sliceProgress, 3)
+    const easedProgress = 1 - Math.pow(1 - sliceProgress, 5)
 
     // Fan spread: all colors fan out in sequence like a flip-book
     // Lower max angle so edge colors are still visible (not facing away)
     const maxSpread = Math.PI /.8 // ~108 degrees total spread
     const normalizedIndex = index / (total - 1) // 0 to 1
+    // const normalizedIndex = index 
     // Map to range: first color at -maxSpread, last color at +maxSpread
     const startAngle = (normalizedIndex - 1) * maxSpread
     // const startAngle = -maxSpread * (1 - normalizedIndex)
@@ -88,29 +91,14 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     // Offset in Z so layers are visible as holographic strips
     meshRef.current.position.z = normalizedOffset * 3 * (1 - easedProgress) + normalizedOffset * 1.5 * easedProgress
 
-    // Color: stay vibrant longer, then fade to holographic gradient
+    // Color: smoothly blend from vibrant to white
     const baseColor = new THREE.Color(color)
+    const whiteColor = new THREE.Color('#ffffff')
 
-    // Create holographic final colors based on slice position
-    // More saturated colors for visible gradient effect
-    const holographicColors = [
-      new THREE.Color('#c0ffe0'), // Green tint (for blues)
-      new THREE.Color('#d0ffd0'), // Light green
-      new THREE.Color('#e8ffe8'), // Pale green
-      new THREE.Color('#f8f8f0'), // Warm white (center)
-      new THREE.Color('#fff0f0'), // Pale pink
-      new THREE.Color('#ffd0e8'), // Light pink
-      new THREE.Color('#ffc0e0'), // Pink tint (for magentas)
-    ]
-    const colorIndex = normalizedIndex * (holographicColors.length - 1)
-    const lowerIndex = Math.floor(colorIndex)
-    const upperIndex = Math.min(lowerIndex + 1, holographicColors.length - 1)
-    const blend = colorIndex - lowerIndex
-    const finalColor = holographicColors[lowerIndex].clone().lerp(holographicColors[upperIndex], blend)
-
-    // Keep color vibrant until 60% progress, then fade to holographic
-    const colorFade = Math.max(0, (easedProgress - 0.6) / 0.4)
-    materialRef.current.color.copy(baseColor).lerp(finalColor, colorFade)
+    // Smooth fade to white - starts at 50%, fully white by 100%
+    const colorFade = Math.max(0, (easedProgress - 0.5) / 0.5)
+    const smoothFade = colorFade * colorFade // Ease-in for smoother transition
+    materialRef.current.color.copy(baseColor).lerp(whiteColor, smoothFade)
 
     // Emissive glow - bright at start, dims slowly and smoothly
     // Uses a smooth ease-out curve for gentle fade
@@ -166,32 +154,48 @@ interface TVTextProps {
   progress: number
 }
 
+function Occluder({ geometry }: { geometry: THREE.ExtrudeGeometry }) {
+  return (
+    <mesh geometry={geometry} renderOrder={0}>
+      <meshBasicMaterial
+        colorWrite={false}
+        transparent
+        opacity={0}         // invisible
+        depthWrite={true}   // ✅ writes depth so it can occlude
+        depthTest={true}
+      />
+    </mesh>
+  )
+}
+
 function TVText({ progress }: TVTextProps) {
   // TV appears after 55% progress
-  if (progress <= 0.55) return null
+  if (progress <= 0.1) return null
 
   // TV animation progress (0 to 1) after it starts appearing
-  const tvProgress = Math.min((progress - 0.55) / 0.35, 1)
+  const tvProgress = Math.min((progress - 0.05) / 0.35, 1)
   const easedProgress = 1 - Math.pow(1 - tvProgress, 3)
 
   return (
     <Html
-      position={[2.5, 0, 0]}
-      center
-      style={{
-        pointerEvents: 'none',
-      }}
+      position={[2.5, 0, -2]}
+  center
+  transform
+  occlude // enable occlusion late
+  zIndexRange={[100, 0]}
+  style={{ pointerEvents: 'none' }}
     >
       <div style={{ position: 'relative', width: '400px', height: '400px' }}>
         {TV_COLORS.map((color, index) => {
           const total = TV_COLORS.length
           const normalizedIndex = index / (total - 1)
+          
           const maxSpread = 60 // pixels of spread
           const maxRotation = 15 // degrees of rotation
 
           // Calculate offset and rotation based on progress
-          const offsetX = (normalizedIndex * 2 - 1) * maxSpread * (1 - easedProgress)
-          const offsetY = Math.sin(normalizedIndex * Math.PI) * 20 * (1 - easedProgress)
+          const offsetX = 0 // (normalizedIndex * 2 - 1) * maxSpread * (1 - easedProgress)
+          const offsetY = 0 //Math.sin(normalizedIndex * Math.PI) * 20 * (1 - easedProgress)
           const rotation = (normalizedIndex * 2 - 1) * maxRotation * (1 - easedProgress)
 
           // Opacity: starts visible, fades to show only merged result
@@ -206,6 +210,7 @@ function TVText({ progress }: TVTextProps) {
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
+                zIndex: "-1",
                 transform: `translate(-50%, -50%) translateX(${offsetX}px) translateY(${offsetY}px) rotate(${rotation}deg)`,
                 fontSize: '350px',
                 fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
@@ -228,6 +233,41 @@ function TVText({ progress }: TVTextProps) {
   )
 }
 
+
+function TVTextMesh({ progress }: { progress: number }) {
+  if (progress <= 0.1) return null
+  const tvProgress = Math.min((progress - 0.1) / 0.35, 1)
+  const eased = 1 - Math.pow(1 - tvProgress, 3)
+
+  return (
+    <group position={[2.5, 0, -4]} renderOrder={1}> {/* behind logo */}
+      {TV_COLORS.map((color, index) => {
+        const total = TV_COLORS.length
+        const t = index / (total - 1)
+        const spread = 0.35
+
+        const x = (t * 2 - 1) * spread * (1 - eased)
+        const y = Math.sin(t * Math.PI) * 0.12 * (1 - eased)
+
+        return (
+          <Text
+            key={index}
+            fontSize={1.8}
+            anchorX="center"
+            anchorY="middle"
+            position={[x, y, index * 0.01]}
+            color={color}
+          >
+            tv
+          </Text>
+        )
+      })}
+    </group>
+  )
+}
+
+
+
 interface AppleLogoProps {
   progress: number
 }
@@ -247,6 +287,7 @@ export function AppleLogo({ progress }: AppleLogoProps) {
   const startY = -Math.PI * 0.1   // ~-108deg at start
   const endY = 0                 // settled at the end
   groupRef.current.rotation.y = startY * (1 - eased) + endY * eased
+  groupRef.current.position.x = eased * 2
 
   // Optional: tiny roll for “premium” feel
   const startZ = Math.PI * 0.08  // ~14deg
@@ -295,8 +336,9 @@ export function AppleLogo({ progress }: AppleLogoProps) {
   if (!geometry) return null
 
   return (
-    <group ref={groupRef} position={[0.5, 0, 0]}>
+    <group ref={groupRef} position={[0, 0, 2]}  renderOrder={1}>
       <group scale={0.005} rotation={[Math.PI, 0, 0]}>
+        {/* <Occluder geometry={geometry} /> */}
         {LOGO_COLORS.map((color, index) => (
           <SingleLogo
             key={index}
@@ -308,7 +350,9 @@ export function AppleLogo({ progress }: AppleLogoProps) {
           />
         ))}
       </group>
-      <TVText progress={progress} />
+      {/* <TVText progress={progress} /> */}
+      {/* <TVTextMesh progress={progress} /> */}
     </group>
   )
 }
+

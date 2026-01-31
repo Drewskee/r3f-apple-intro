@@ -54,27 +54,23 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
   const randomOffsetX = seedX * 80 // Random X offset
   const randomOffsetY = seedY * 60 // Random Y offset
 
-  // Staggered timing - outer slices take slightly longer to fold in
-  const distanceFromCenter = Math.abs(index - (total - 1) / 2)
-  const maxDistance = (total - 1) / 2
-  // const normalizedIndex = index / (total - 1)
-  // const sliceDelay = normalizedIndex * 0.15
-  const sliceDelay = (distanceFromCenter / maxDistance) * 0.15
+  // Staggered timing - each color appears sequentially
+  const normalizedIndex = index / (total - 1) // 0 to 1
+  const sliceDelay = normalizedIndex * 0.4 // First color starts at 0%, last at 40%
 
   useFrame(() => {
     if (!meshRef.current || !materialRef.current) return
 
-    // Progress for this slice - completes by 60% of animation
-    const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (0.55 - sliceDelay), 1))
+    // Each slice has its own delayed start, completes by 70%
+    const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (0.7 - sliceDelay), 1))
 
     // Ease-out cubic - starts fast, slows down towards end
-    const easedProgress = 1 - Math.pow(1 - sliceProgress, 5)
+    const easedProgress = 1 - Math.pow(1 - sliceProgress, 4)
 
-    // Fan spread: like a book closing from one side
-    const maxSpread = Math.PI / 0.8 // ~225 degrees total spread
-    const normalizedIndex = index / (total - 1) // 0 to 1
-    // All slices fan out to one side, first slice most rotated
-    const startAngle = (normalizedIndex - 1) * maxSpread
+    // Fan rotation: all rotate from the same side (like flipping book pages)
+    const maxSpread = Math.PI / 0.9 // ~200 degrees rotation
+    // All start rotated to one side, flip to center
+    const startAngle = -maxSpread
     // End aligned together
     const currentRotation = startAngle * (1 - easedProgress)
     meshRef.current.rotation.y = currentRotation
@@ -84,24 +80,27 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     meshRef.current.position.y = randomOffsetY * (1 - easedProgress)
 
     // Z-offset: purple (index 0) in back, white (last index) in front
-    const zStart = (normalizedIndex - 0.5) * 4 // Spread out at start
-    const zEnd = normalizedIndex * 0.8 // Purple at z=0 (back), White at z=0.8 (front)
-    meshRef.current.position.z = zStart * (1 - easedProgress) + zEnd * easedProgress
+    // Each slice stacks in front of the previous one
+    const zEnd = normalizedIndex * 1.0 // Purple at z=0 (back), White at z=1.0 (front)
+    meshRef.current.position.z = zEnd
 
     // Glass material - keep color throughout
     const baseColor = new THREE.Color(color)
     materialRef.current.color.copy(baseColor)
 
     // Emissive rim glow - maintains throughout for glass edge effect
-    const glowIntensity = 1.5 * (0.3 + 0.7 * (1 - easedProgress)) // Fades but keeps some glow
+    const glowIntensity = 1.8 * (0.4 + 0.6 * (1 - easedProgress)) // Fades but keeps some glow
     materialRef.current.emissive.copy(baseColor)
     materialRef.current.emissiveIntensity = glowIntensity
 
-    // Glass-like transparency - stays transparent
-    materialRef.current.opacity = 0.15 + easedProgress * 0.25 // 15% to 40%
+    // Glass-like transparency - fade in as slice appears, stay transparent
+    // Opacity increases as slice rotates in, peaks around halfway
+    const fadeIn = Math.min(easedProgress * 3, 1) // Quick fade in at start
+    const baseOpacity = 0.2 + easedProgress * 0.15 // 20% to 35%
+    materialRef.current.opacity = fadeIn * baseOpacity
 
-    // High transmission for glass look
-    materialRef.current.transmission = 0.85 - easedProgress * 0.15 // 85% to 70%
+    // High transmission for glass look throughout
+    materialRef.current.transmission = 0.85
   })
 
   return (
@@ -112,7 +111,7 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
         emissive={color}
         emissiveIntensity={1.5}
         transparent
-        opacity={0.15}
+        opacity={0}
         roughness={0.0}
         metalness={0.0}
         clearcoat={1.0}

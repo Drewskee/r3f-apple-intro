@@ -12,7 +12,7 @@ import { Controls } from './Controls'
 const TOTAL_CYCLE = 6 // seconds
 
 const GRADIENT_COLORS = {
-  dark: ['#000000', '#0F2027'],
+  dark: ['#000000', '#070e10'],
   light: ['#203A43', '#C4E0E5'],
 }
 

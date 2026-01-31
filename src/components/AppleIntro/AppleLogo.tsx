@@ -62,17 +62,16 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     if (!meshRef.current || !materialRef.current) return
 
     // Each slice has its own delayed start, completes by 70%
-    const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (0.7 - sliceDelay), 1))
+    const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (1 - sliceDelay), 1))
 
-    // Ease-out cubic - starts fast, slows down towards end
+    // Ease-out quart - fast start, smooth slow finish
     const easedProgress = 1 - Math.pow(1 - sliceProgress, 4)
-
     // Fan rotation: all rotate from the same side (like flipping book pages)
-    const maxSpread = Math.PI / 0.9 // ~200 degrees rotation
+    const maxSpread = Math.PI / 1.5 // ~200 degrees rotation
     // All start rotated to one side, flip to center
     const startAngle = -maxSpread
     // End aligned together
-    const currentRotation = startAngle * (1 - easedProgress)
+    const currentRotation = startAngle * (.9 - easedProgress)
     meshRef.current.rotation.y = currentRotation
 
     // Random X/Y offsets that correct to 0 (creates rainbow echo effect)
@@ -95,12 +94,12 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
 
     // Glass-like transparency - fade in as slice appears, stay transparent
     // Opacity increases as slice rotates in, peaks around halfway
-    const fadeIn = Math.min(easedProgress * 3, 1) // Quick fade in at start
+    const fadeIn = Math.min(easedProgress * 1, 1) // Quick fade in at start
     const baseOpacity = 0.2 + easedProgress * 0.15 // 20% to 35%
     materialRef.current.opacity = fadeIn * baseOpacity
 
     // High transmission for glass look throughout
-    materialRef.current.transmission = 0.85
+    materialRef.current.transmission = 0.8
   })
 
   return (

@@ -84,28 +84,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           className="flex-col cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-[200px] items-start bg-transparent hover:bg-transparent focus:bg-transparent border-2 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950"
         >
 
-          
+
 
           <div className="flex w-full items-start bg-transparent hover:bg-transparent focus:bg-transparent">
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={"https://m.media-amazon.com/images/M/MV5BNDExOTYzZjEtMjQxYy00OGIxLTg4YmMtMjZhMGY1YTY2NDc0XkEyXkFqcGc@._V1_.jpg"} alt={"Drew Stephenson"} />
-            <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col items-center justify-center text-sm h-full ml-2 w-full">
+            <Avatar className="h-8 w-8 rounded-lg">
+              <AvatarImage src={"https://m.media-amazon.com/images/M/MV5BNDExOTYzZjEtMjQxYy00OGIxLTg4YmMtMjZhMGY1YTY2NDc0XkEyXkFqcGc@._V1_.jpg"} alt={"Drew Stephenson"} />
+              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col items-center justify-center text-sm h-full ml-2 w-full">
 
-            <div className="flex flex-col">
-              <span className="truncate font-medium">{"Drew Stephenson"}</span>
-              <span className="truncate font-medium">{"Software Engineer"}</span>
+              <div className="flex flex-col">
+                <span className="truncate font-medium">{"Drew Stephenson"}</span>
+                <span className="truncate font-medium">{"Software Engineer"}</span>
 
-            </div>
+              </div>
 
-            {/* <div className="flex-2 mt-2 h-full flex items-center justify-center rounded-lg p-1 text-xs">
+              {/* <div className="flex-2 mt-2 h-full flex items-center justify-center rounded-lg p-1 text-xs">
                  View Portfolio Site <ExternalLink className="ml-1 size-3" />
                 </div> */}
+            </div>
           </div>
-</div>
 
-{/* <div className="flex-2 w-full mt-2 h-full flex items-center justify-center rounded-lg p-1 text-xs">
+          {/* <div className="flex-2 w-full mt-2 h-full flex items-center justify-center rounded-lg p-1 text-xs">
                  View <ExternalLink className="ml-1 size-3" />
                 </div> */}
           {/* <ChevronsUpDown className="ml-auto size-4" /> */}
@@ -131,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <span>Linkedin</span>
             <ChevronRight className="ml-auto size-4" />
           </a>
-          
+
         </SidebarMenuButton>
       </SidebarFooter>
       <SidebarRail />

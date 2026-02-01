@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { Html } from '@react-three/drei'
 import { Text } from '@react-three/drei'
+import { FAN_ANIMATION_SPEED } from '@/lib/constants'
 
 
 // Apple logo SVG path
@@ -52,7 +53,7 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
   const seedX = Math.sin(index * 1234.5678) * 0.5
   const seedY = Math.cos(index * 8765.4321) * 0.5
   const randomOffsetX = seedX * 80 // Random X offset
-  const randomOffsetY = seedY * 60 // Random Y offset
+  const randomOffsetY = seedY * 80 // Random Y offset
 
   // Staggered timing - each color appears sequentially
   const normalizedIndex = index / (total - 1) // 0 to 1
@@ -65,7 +66,7 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     const sliceProgress = Math.max(0, Math.min((animationProgress - sliceDelay) / (1 - sliceDelay), 1))
 
     // Ease-out quart - fast start, smooth slow finish
-    const easedProgress = 1 - Math.pow(1 - sliceProgress, 4)
+    const easedProgress = 1 - Math.pow(1 - sliceProgress, FAN_ANIMATION_SPEED)
     // Fan rotation: all rotate from the same side (like flipping book pages)
     const maxSpread = Math.PI / 1.5 // ~200 degrees rotation
     // All start rotated to one side, flip to center
@@ -88,13 +89,13 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     materialRef.current.color.copy(baseColor)
 
     // Emissive rim glow - maintains throughout for glass edge effect
-    const glowIntensity = 1.8 * (0.4 + 0.6 * (1 - easedProgress)) // Fades but keeps some glow
+    const glowIntensity = 1.8 * (0.4 + .6 * (1 - easedProgress)) // Fades but keeps some glow
     materialRef.current.emissive.copy(baseColor)
     materialRef.current.emissiveIntensity = glowIntensity
 
     // Glass-like transparency - fade in as slice appears, stay transparent
     // Opacity increases as slice rotates in, peaks around halfway
-    const fadeIn = Math.min(easedProgress * 1, 1) // Quick fade in at start
+    const fadeIn = Math.min(easedProgress * 1, 3) // Quick fade in at start
     const baseOpacity = 0.2 + easedProgress * 0.15 // 20% to 35%
     materialRef.current.opacity = fadeIn * baseOpacity
 
@@ -314,7 +315,8 @@ export function AppleLogo({ progress }: AppleLogoProps) {
         // Offset so pivot is on the round side (opposite the bite)
         // The bite is on the left after centering, so move geometry left
         // to put pivot on the right (round side)
-        geo.translate(-407, 0, 0)
+        // Increased offset to add more space at the pivot center (like the reference)
+        geo.translate(-550, 0, 0)
 
         setGeometry(geo)
       }

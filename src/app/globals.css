@@ -82,7 +82,7 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #070e10;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -134,14 +134,15 @@
   height: 100vh;
   background: #000; */
   width: 100%;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 81px);
   background: #0F2027;
   /* fallback for old browsers */
   background: -webkit-linear-gradient(to bottom, #2C5364, #203A43, #0F2027);
   /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(to bottom, #2C5364, #203A43, #0F2027);
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-
+  position: relative;
+  overflow: hidden;
 }
 
 .apple-intro-container canvas {
@@ -155,6 +156,8 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  width: 100%;
+  max-width: 450px;
 }
 
 .controls-wrapper {

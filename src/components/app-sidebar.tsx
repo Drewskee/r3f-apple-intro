@@ -1,169 +1,45 @@
-import * as React from "react"
+'use client'
 
-import { SearchForm } from "@/components/search-form"
-import { VersionSwitcher } from "@/components/version-switcher"
+import React from "react"
+import { LayoutContext } from "@/context/layout.context";
+import { useContext } from "react"
+
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
+  SidebarRail,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
+  SidebarMenuSkeleton
 } from "@/components/ui/sidebar"
-import { CogIcon, Settings2Icon, SlidersHorizontalIcon } from "lucide-react"
+import { Settings2Icon } from "lucide-react"
 
-// This is sample data.
-const data = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-  navMain: [
-    {
-      title: "Getting Started",
-      url: "#",
-      items: [
-        {
-          title: "Installation",
-          url: "#",
-        },
-        {
-          title: "Project Structure",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Building Your Application",
-      url: "#",
-      items: [
-        {
-          title: "Routing",
-          url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
-          url: "#",
-        },
-        {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "API Reference",
-      url: "#",
-      items: [
-        {
-          title: "Components",
-          url: "#",
-        },
-        {
-          title: "File Conventions",
-          url: "#",
-        },
-        {
-          title: "Functions",
-          url: "#",
-        },
-        {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Architecture",
-      url: "#",
-      items: [
-        {
-          title: "Accessibility",
-          url: "#",
-        },
-        {
-          title: "Fast Refresh",
-          url: "#",
-        },
-        {
-          title: "Next.js Compiler",
-          url: "#",
-        },
-        {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
-      ],
-    },
-  ],
-}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { sidebarRef } = useContext(LayoutContext)
+
+  const projects = [
+    {
+      name: 'Project Alpha',
+      url: '#',
+      icon: Settings2Icon,
+    },
+    {
+      name: 'Project Beta',
+      url: '#',
+      icon: Settings2Icon,
+    },]
+
   return (
-    <Sidebar {...props}>
-      <SidebarHeader>
-        {/* <VersionSwitcher
-          versions={data.versions}
-          defaultVersion={data.versions[0]}
-        /> */}
-        {/* <SearchForm /> */}
+    <Sidebar ref={sidebarRef} {...props} variant="inset" collapsible="icon">
+      <SidebarHeader className="bg-background">
         <div className="p-4 text-lg font-medium flex items-center gap-2">
-          <Settings2Icon size={35}/>
         </div>
-        
+
       </SidebarHeader>
-      <SidebarContent>
-        <div className="flex justify-center items-center">Settings</div>
+      <SidebarContent className="bg-background">
         {/* We create a SidebarGroup for each parent. */}
         {/* {data.navMain.map((item) => (
           <SidebarGroup key={item.title}>
@@ -181,6 +57,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupContent>
           </SidebarGroup>
         ))} */}
+        <SidebarMenu>
+  {projects.map((project) => (
+    <SidebarMenuItem key={project.name}>
+      <SidebarMenuButton asChild>
+        <a href={project.url}>
+          <project.icon />
+          <span>{project.name}</span>
+        </a>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  ))}
+</SidebarMenu>
+
+{/* {Array.from({ length: 5 }).map((_, index) => (
+    <SidebarMenuItem key={index}>
+      <SidebarMenuSkeleton />
+    </SidebarMenuItem>
+  ))} */}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

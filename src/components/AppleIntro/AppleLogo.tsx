@@ -79,8 +79,8 @@ function SingleLogo({ geometry, color, index, total, animationProgress }: Single
     meshRef.current.position.y = randomOffsetY * (1 - easedProgress)
 
     // Z-offset: purple (index 0) in back, white (last index) in front
-    // Each slice stacks in front of the previous one
-    const zEnd = normalizedIndex * 1.0 // Purple at z=0 (back), White at z=1.0 (front)
+    // Each slice stacks in front of the previous one - increased for more visible layered edges
+    const zEnd = normalizedIndex * 2.5 // Purple at z=0 (back), White at z=2.5 (front)
     meshRef.current.position.z = zEnd
 
     // Glass material - keep color throughout
@@ -167,17 +167,17 @@ function TVText({ progress }: TVTextProps) {
   return (
     <Html
       position={[2.5, 0, -2]}
-  center
-  transform
-  occlude // enable occlusion late
-  zIndexRange={[100, 0]}
-  style={{ pointerEvents: 'none' }}
+      center
+      transform
+      occlude // enable occlusion late
+      zIndexRange={[100, 0]}
+      style={{ pointerEvents: 'none' }}
     >
       <div style={{ position: 'relative', width: '400px', height: '400px' }}>
         {TV_COLORS.map((color, index) => {
           const total = TV_COLORS.length
           const normalizedIndex = index / (total - 1)
-          
+
           const maxSpread = 60 // pixels of spread
           const maxRotation = 15 // degrees of rotation
 
@@ -265,22 +265,22 @@ export function AppleLogo({ progress }: AppleLogoProps) {
   const [geometry, setGeometry] = useState<THREE.ExtrudeGeometry | null>(null)
 
   useFrame(() => {
-  if (!groupRef.current) return
+    if (!groupRef.current) return
 
-  // closing portion only (your slices complete around ~0.55)
-  const closeProgress = Math.min(progress / 0.55, 1)
-  const eased = 1 - Math.pow(1 - closeProgress, 3)
+    // closing portion only (your slices complete around ~0.55)
+    const closeProgress = Math.min(progress / 0.55, 1)
+    const eased = 1 - Math.pow(1 - closeProgress, 3)
 
-  // Example: start rotated, end aligned
-  const startY = -Math.PI * 0.1   // ~-108deg at start
-  const endY = 0                 // settled at the end
-  groupRef.current.rotation.y = startY * (1 - eased) + endY * eased
-  groupRef.current.position.x = eased * 2
+    // Example: start rotated, end aligned
+    const startY = -Math.PI * 0.1   // ~-108deg at start
+    const endY = 0                 // settled at the end
+    groupRef.current.rotation.y = startY * (1 - eased) + endY * eased
+    groupRef.current.position.x = eased * 2
 
-  // Optional: tiny roll for “premium” feel
-  const startZ = Math.PI * 0.08  // ~14deg
-  groupRef.current.rotation.z = startZ * (1 - eased)
-})
+    // Optional: tiny roll for “premium” feel
+    const startZ = Math.PI * 0.08  // ~14deg
+    groupRef.current.rotation.z = startZ * (1 - eased)
+  })
 
   useEffect(() => {
     const loader = new SVGLoader()
@@ -324,7 +324,7 @@ export function AppleLogo({ progress }: AppleLogoProps) {
   if (!geometry) return null
 
   return (
-    <group ref={groupRef} position={[0, 0, 2]}  renderOrder={1}>
+    <group ref={groupRef} position={[0, 1, 2]} renderOrder={1}>
       <group scale={0.005} rotation={[Math.PI, 0, 0]}>
         {/* <Occluder geometry={geometry} /> */}
         {LOGO_COLORS.map((color, index) => (

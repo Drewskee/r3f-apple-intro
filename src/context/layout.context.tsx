@@ -1,3 +1,5 @@
+"use client"
+
 import useElementSize from '@/hooks/useElementSize';
 import { createContext, ReactElement } from 'react';
 
@@ -25,16 +27,17 @@ const LayoutContext = createContext<ILayoutContext>(initialValues);
 const LayoutContextProvider = ({ children }: {children:ReactElement}) => {
   // We attached the node ref to the component and share the baseRef incase you need to make updates to the DOM
   const [sidebarRef, sidebarSize] = useElementSize();
-  const [mainContentRef, chatListSize] = useElementSize();
+  const [mainContentRef, mainContentSize] = useElementSize();
 
+  console.log('LayoutContextProvider mainContentWidth:', mainContentSize.width);
   return (
     <LayoutContext.Provider
       value={{
         sidebarHeight: sidebarSize.height,
         sidebarWidth: sidebarSize.width,
         sidebarRef,
-        mainContentHeight: chatListSize.height,
-        mainContentWidth: chatListSize.width,
+        mainContentHeight: mainContentSize.height,
+        mainContentWidth: mainContentSize.width,
         mainContentRef,
       }}
     >

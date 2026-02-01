@@ -1,3 +1,4 @@
+"use client"
 import { AppleIntro } from '@/components/AppleIntro'
 import { AppSidebar } from "@/components/app-sidebar"
 import {
@@ -14,13 +15,20 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { LayoutContext } from '@/context/layout.context'
+import { useContext } from 'react'
+
+
 
 export default function Page() {
+
+  const { mainContentRef } = useContext(LayoutContext)
+
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+      <SidebarInset ref={mainContentRef}>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 bg-background border-0">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -29,9 +37,9 @@ export default function Page() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbPage>Apple Intro - R3F</BreadcrumbPage>
+                <BreadcrumbPage>Apple TV Intro</BreadcrumbPage>
               </BreadcrumbItem>
-              
+
             </BreadcrumbList>
           </Breadcrumb>
         </header>
@@ -43,7 +51,7 @@ export default function Page() {
           </div>
           <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
         </div>
-        <AppleIntro/>
+        <AppleIntro />
       </SidebarInset>
     </SidebarProvider>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useContext } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -8,11 +8,12 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { AppleLogo } from './AppleLogo'
 import { Lights } from './Lights'
 import { Controls } from './Controls'
+import { LayoutContext } from '@/context/layout.context'
 
 const TOTAL_CYCLE = 6 // seconds
 
 const GRADIENT_COLORS = {
-  dark: ['#000000', '#070e10'],
+  dark: ['#080808', '#000000'],
   light: ['#203A43', '#C4E0E5'],
 }
 
@@ -62,6 +63,7 @@ export function AppleIntro() {
   const [isPlaying, setIsPlaying] = useState(true)
   const [progress, setProgress] = useState(0)
   const [isDark, setIsDark] = useState(true)
+  const { mainContentWidth } = useContext(LayoutContext)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -110,7 +112,7 @@ export function AppleIntro() {
   }, [])
 
   return (
-    <div className="apple-intro-container">
+    <div className="apple-intro-container overflow-hidden rounded-b-lg" style={{ width: mainContentWidth }}>
       <Canvas
         camera={{ position: [0, 0, 12], fov: 50 }}
         gl={{
@@ -118,6 +120,7 @@ export function AppleIntro() {
           alpha: false,
           toneMapping: 0,
         }}
+        className='overflow-hidden rounded-b-lg'
       >
           <ambientLight intensity={isDark ? 1.2 * Math.PI : Math.sin(progress) * Math.PI } />
 
@@ -137,7 +140,7 @@ export function AppleIntro() {
         </EffectComposer>
 
         <OrbitControls
-          enableZoom={false}
+          enableZoom={true}
           enablePan={false}
           autoRotate={false}
           minPolarAngle={Math.PI / 3}

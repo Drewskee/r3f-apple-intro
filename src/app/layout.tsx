@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     default: APP_DEFAULT_TITLE,
     template: APP_TITLE_TEMPLATE,
   },
+    authors: [{
+    name: "Drew Stephenson",
+    url: "https://drewstephenson.io",
+    }],
+
   description: APP_DESCRIPTION,
 };
 

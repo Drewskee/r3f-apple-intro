@@ -19,7 +19,7 @@ export const ORBITCTRLS_AUTO_ROTATE = false;
 export const ORBITCTRLS_MIN_POLAR_ANGLE = Math.PI / 3;
 export const ORBITCTRLS_MAX_POLAR_ANGLE = Math.PI / 1.5;
     
-export const LOGO_COLORS = [
+export const LOGO_COLORS_MAX = [
   '#cc00ff', // Purple (back)
   '#ff00aa', // Pink
   '#ff0066', // Red-pink
@@ -40,7 +40,25 @@ export const LOGO_COLORS = [
   '#ffffff', // White (front)
 ]
 
+export const LOGO_COLORS = [
+  '#cc00ff', // Purple (back)
+  '#ff3300', // Red
+  '#ff9900', // Orange
+  '#ffff00', // Yellow
+  '#88ff00', // Lime
+  '#00ff44', // Green
+  '#00ccff', // Cyan
+  '#cceeff', // Pale blue
+  '#ffffff', // White (front)
+]
+
+
 export const FAN_ANIMATION_SPEED = 4;
+
+// Offset so pivot is on the round side (opposite the bite)
+// The bite is on the left after centering, so move geometry left
+// to put pivot on the right (round side)
+// Increased offset to add more space at the pivot center (like the reference)
 export const GEO_TRANSLATE_X = -550;
 export const GEO_TRANSLATE_Y = 0;
 export const GEO_TRANSLATE_Z = 0;

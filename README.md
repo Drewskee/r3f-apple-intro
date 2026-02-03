@@ -58,7 +58,7 @@ pnpm dev
 - `npm run lint` - Run ESLint
 
 
-I wrote up the full breakdown below, and it also happens to be my first Medium article. 😊 All feedback is appreciated. 
+Full breakdown below 
 
 https://medium.com/@andrewdevelops/building-an-apple-style-intro-in-react-three-fiber-taught-me-8-hard-lessons-about-animation-d372ba0005b0?postPublishedType=repub
 

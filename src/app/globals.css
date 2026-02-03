@@ -82,7 +82,7 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #070e10;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -119,24 +119,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Apple Intro Canvas Styles */
-.apple-intro-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: #000;
-}
 
-.apple-intro-container canvas {
-  display: block;
-}
 
 /* Playback Controls */
 .controls-container {
@@ -145,6 +134,8 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  width: 100%;
+  max-width: 450px;
 }
 
 .controls-wrapper {

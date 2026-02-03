@@ -1,5 +1,6 @@
-import { AppleIntro } from '@/components/AppleIntro'
+"use client"
+import AppleIntro from '@/components/Experience'
 
-export default function Home() {
-  return <AppleIntro />
+export default function Page() {
+  return (<AppleIntro />)
 }

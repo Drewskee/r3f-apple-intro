@@ -16,7 +16,7 @@ export function Controls({
   onSliderChange,
 }: ControlsProps) {
   return (
-    <div className="controls-container">
+    <div className="controls-container text-foreground border-2 border-foreground/20 backdrop-blur-md rounded-[50px]">
       <div className="controls-wrapper">
         <button
           onClick={onRestart}
@@ -53,7 +53,7 @@ export function Controls({
           step="0.001"
           value={progress}
           onChange={(e) => onSliderChange(parseFloat(e.target.value))}
-          className="progress-slider"
+          className="progress-slider bg-foreground/10"
         />
 
         <span className="progress-text">

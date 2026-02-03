@@ -1,6 +1,17 @@
 # Apple TV Intro Animation
 
-A recreation of the Apple TV intro animation built with React Three Fiber and Next.js.
+Apple TV’s new intro looks simple, right?
+A logo. A glow. A collapse.
+
+What made it even more interesting to me?
+
+The original commercial was created entirely without computer graphics 🤯
+
+So, I tried to recreate the same illusion entirely in CG using React Three Fiber and Next.js, not to copy Apple, but to understand how motion, geometry, and light work together when realism is not handed to you.
+
+I wrote up the full breakdown below, and it also happens to be my first Medium article. 😊
+
+https://lnkd.in/eseTU6-D
 
 ![Apple TV Intro Animation](./public/Apple_Intro_tv.gif)
 
